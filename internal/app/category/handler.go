@@ -7,18 +7,38 @@ import (
 	"net/http"
 )
 
-func GetCategory(c *gin.Context) {
+type CategoryHandler struct {
+	svc CategoryService
+}
+
+func NewCategoryHandler(svc CategoryService) *CategoryHandler {
+	return &CategoryHandler{svc: svc}
+}
+
+func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	category := make([]Category, 0)
 
-	if err := ServiceGetCategory(c, &category); err != nil {
+	if err := h.svc.ServiceGetCategories(&category); err != nil {
 		utils.HandleError(c, err)
 		return
 	}
 
-	c.JSON(200, category)
+	c.JSON(http.StatusOK, category)
 }
 
-func PostCategory(c *gin.Context) {
+func (h *CategoryHandler) GetCategoryById(c *gin.Context) {
+	id := c.Param("id")
+	var category Category
+
+	if err := h.svc.ServiceGetCategory(&category, id); err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, category)
+}
+
+func (h *CategoryHandler) PostCategory(c *gin.Context) {
 	var body Category
 
 	if err := json.NewDecoder(c.Request.Body).Decode(&body); err != nil {
@@ -28,9 +48,10 @@ func PostCategory(c *gin.Context) {
 		return
 	}
 
-	if err := ServiceCreateCategory(c, &body); err != nil {
+	if err := h.svc.ServiceCreateCategory(&body); err != nil {
 		utils.HandleError(c, err)
 		return
 	}
 
+	c.JSON(http.StatusCreated, body)
 }

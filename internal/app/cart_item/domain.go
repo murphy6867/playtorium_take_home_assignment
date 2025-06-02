@@ -12,7 +12,7 @@ type CartItem struct {
 	CartID     uint    `json:"cart_id"`
 	Quantity   int32   `json:"quantity"`
 	TotalPrice float64 `json:"total_price"`
-	
+
 	Cart    *cart.Cart       `gorm:"foreignKey:CartID;references:ID"`
 	Product *product.Product `gorm:"foreignKey:ProductID;references:ID"`
 }

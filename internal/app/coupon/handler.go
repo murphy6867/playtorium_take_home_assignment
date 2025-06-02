@@ -7,10 +7,18 @@ import (
 	"net/http"
 )
 
-func GetCouponsHandler(c *gin.Context) {
+type CouponHandler struct {
+	svc CouponService
+}
+
+func NewCouponHandler(svc CouponService) *CouponHandler {
+	return &CouponHandler{svc: svc}
+}
+
+func (h *CouponHandler) GetCouponsHandler(c *gin.Context) {
 	coupon := make([]Coupon, 0)
 
-	if err := ServiceGetCoupons(&coupon); err != nil {
+	if err := h.svc.ServiceGetCoupons(&coupon); err != nil {
 		utils.HandleError(c, err)
 		return
 	}
@@ -18,7 +26,7 @@ func GetCouponsHandler(c *gin.Context) {
 	c.JSON(200, coupon)
 }
 
-func PostCoupon(c *gin.Context) {
+func (h *CouponHandler) PostCoupon(c *gin.Context) {
 	var body Coupon
 
 	if err := json.NewDecoder(c.Request.Body).Decode(&body); err != nil {
@@ -28,7 +36,7 @@ func PostCoupon(c *gin.Context) {
 		return
 	}
 
-	if err := ServiceCreateCoupon(&body); err != nil {
+	if err := h.svc.ServiceCreateCoupon(&body); err != nil {
 		utils.HandleError(c, err)
 		return
 	}

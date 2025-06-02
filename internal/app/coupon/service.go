@@ -5,14 +5,27 @@ import (
 	"net/http"
 )
 
-func ServiceGetCoupons(data *[]Coupon) error {
-	if err := RepositoryGetCoupons(data); err != nil {
+type CouponService interface {
+	ServiceGetCoupons(data *[]Coupon) error
+	ServiceCreateCoupon(data *Coupon) error
+}
+
+type service struct {
+	repo Repository
+}
+
+func NewCouponService(repo Repository) CouponService {
+	return &service{repo: repo}
+}
+
+func (s *service) ServiceGetCoupons(data *[]Coupon) error {
+	if err := s.repo.RepositoryGetCoupons(data); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ServiceCreateCoupon(data *Coupon) error {
+func (s *service) ServiceCreateCoupon(data *Coupon) error {
 	if data == nil {
 		return utils.NewDomainError(http.StatusBadRequest, "Request body is empty")
 	}
@@ -33,7 +46,7 @@ func ServiceCreateCoupon(data *Coupon) error {
 		return utils.NewDomainError(http.StatusBadRequest, "Coupon campaign with category is invalid")
 	}
 
-	if err := RepositoryCreateCoupon(data); err != nil {
+	if err := s.repo.RepositoryCreateCoupon(data); err != nil {
 		return err
 	}
 

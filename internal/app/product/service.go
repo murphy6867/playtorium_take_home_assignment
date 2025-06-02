@@ -1,32 +1,45 @@
 package product
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/murphy6867/productcheckout/internal/utils"
 	"net/http"
 )
 
-func ServiceGetProducts(c *gin.Context, data *[]Product) error {
-	if err := RepositoryGetProducts(c, data); err != nil {
+type ProductService interface {
+	ServiceGetProducts(data *[]Product) error
+	ServiceGetProduct(data *Product, id string) error
+	ServiceCreateProduct(data *Product) error
+}
+
+type service struct {
+	repo ProductRepository
+}
+
+func NewProductService(repo ProductRepository) ProductService {
+	return &service{repo: repo}
+}
+
+func (s *service) ServiceGetProducts(data *[]Product) error {
+	if err := s.repo.RepositoryGetProducts(data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ServiceGetProduct(c *gin.Context, data *Product, id string) error {
+func (s *service) ServiceGetProduct(data *Product, id string) error {
 	if id == "" {
 		return utils.NewDomainError(http.StatusBadRequest, "Product id is required")
 	}
 
-	if err := RepositoryGetProduct(c, data, id); err != nil {
+	if err := s.repo.RepositoryGetProduct(data, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ServiceCreateProduct(c *gin.Context, data *Product) error {
+func (s *service) ServiceCreateProduct(data *Product) error {
 	if data.Name == "" {
 		return utils.NewDomainError(http.StatusBadRequest, "Category name is required")
 	}
@@ -39,7 +52,7 @@ func ServiceCreateProduct(c *gin.Context, data *Product) error {
 		return utils.NewDomainError(http.StatusBadRequest, "Category name is required")
 	}
 
-	if err := RepositoryCreatProduct(c, data); err != nil {
+	if err := s.repo.RepositoryCreatProduct(data); err != nil {
 		return err
 	}
 

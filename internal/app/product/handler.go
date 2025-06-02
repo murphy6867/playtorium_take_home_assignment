@@ -7,9 +7,17 @@ import (
 	"net/http"
 )
 
-func GetProducts(c *gin.Context) {
+type ProductHandler struct {
+	svc ProductService
+}
+
+func NewProductHandler(svc ProductService) *ProductHandler {
+	return &ProductHandler{svc: svc}
+}
+
+func (h *ProductHandler) GetProducts(c *gin.Context) {
 	product := make([]Product, 0)
-	if err := ServiceGetProducts(c, &product); err != nil {
+	if err := h.svc.ServiceGetProducts(&product); err != nil {
 		utils.HandleError(c, err)
 		return
 	}
@@ -17,10 +25,10 @@ func GetProducts(c *gin.Context) {
 	c.JSON(200, product)
 }
 
-func GetProduct(c *gin.Context) {
+func (h *ProductHandler) GetProduct(c *gin.Context) {
 	ID := c.Param("id")
 	var product Product
-	if err := ServiceGetProduct(c, &product, ID); err != nil {
+	if err := h.svc.ServiceGetProduct(&product, ID); err != nil {
 		utils.HandleError(c, err)
 		return
 	}
@@ -28,7 +36,7 @@ func GetProduct(c *gin.Context) {
 	c.JSON(200, product)
 }
 
-func PostProduct(c *gin.Context) {
+func (h *ProductHandler) PostProduct(c *gin.Context) {
 	var body Product
 
 	if err := json.NewDecoder(c.Request.Body).Decode(&body); err != nil {
@@ -38,7 +46,7 @@ func PostProduct(c *gin.Context) {
 		return
 	}
 
-	if err := ServiceCreateProduct(c, &body); err != nil {
+	if err := h.svc.ServiceCreateProduct(&body); err != nil {
 		utils.HandleError(c, err)
 		return
 	}
