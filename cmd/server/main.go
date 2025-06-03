@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/murphy6867/productcheckout/internal/app/applied_coupon"
 	"github.com/murphy6867/productcheckout/internal/app/cart"
 	"github.com/murphy6867/productcheckout/internal/app/cart_item"
 	"github.com/murphy6867/productcheckout/internal/app/category"
@@ -38,6 +39,10 @@ func main() {
 	cartItemSvc := cart_item.NewCartItemService(cartItemRepo, cartSvc, productSvc)
 	cartItemHdl := cart_item.NewCartItemHandler(cartItemSvc)
 
+	appliedCouponRepo := applied_coupon.NewAppliedCouponRepository(config.DB)
+	appliedCouponSvc := applied_coupon.NewAppliedCouponService(appliedCouponRepo)
+	appliedCouponHdl := applied_coupon.NewAppliedCouponHandler(appliedCouponSvc)
+
 	router.GET("/category", categoryHdl.GetCategory)
 	router.GET("/category/:id", categoryHdl.GetCategoryById)
 	router.POST("/category", categoryHdl.PostCategory)
@@ -53,7 +58,10 @@ func main() {
 	router.GET("/cart/:id", cartHdl.GetCartByIdHandler)
 	router.POST("/cart", cartHdl.PostCartHandler)
 
-	router.POST("/cart_item", cartItemHdl.CreateCartItems)
+	router.GET("/cart_item/:cartID", cartItemHdl.GetCartItemByCartIDHandler)
+	router.POST("/cart_item", cartItemHdl.CreateCartItemsHandler)
+
+	router.POST("/applied_coupon", appliedCouponHdl.CreateAppliedCoupon)
 
 	router.Run()
 }

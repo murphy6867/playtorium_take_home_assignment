@@ -22,7 +22,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, product)
+	c.JSON(http.StatusOK, product)
 }
 
 func (h *ProductHandler) GetProduct(c *gin.Context) {
@@ -33,7 +33,7 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, product)
+	c.JSON(http.StatusOK, product)
 }
 
 func (h *ProductHandler) PostProduct(c *gin.Context) {
@@ -50,4 +50,6 @@ func (h *ProductHandler) PostProduct(c *gin.Context) {
 		utils.HandleError(c, err)
 		return
 	}
+
+	c.JSON(http.StatusCreated, body)
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"log"
+	"math"
 	"net/http"
 )
 
@@ -32,4 +33,9 @@ func HandleError(c *gin.Context, err error) {
 
 	log.Printf("Unhandled error: %v", err)
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+}
+
+func RoundFloat(val float64, precision int) float64 {
+	pow := math.Pow(10, float64(precision))
+	return math.Round(val*pow) / pow
 }
