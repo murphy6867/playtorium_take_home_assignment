@@ -41,3 +41,15 @@ func (h *CouponHandler) PostCoupon(c *gin.Context) {
 		return
 	}
 }
+
+func (h *CouponHandler) GetCouponById(c *gin.Context) {
+	id := c.Param("id")
+	var coupon Coupon
+
+	if err := h.svc.ServiceGetCouponByID(&coupon, id); err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, coupon)
+}

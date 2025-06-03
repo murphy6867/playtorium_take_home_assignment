@@ -8,6 +8,7 @@ import (
 type CouponService interface {
 	ServiceGetCoupons(data *[]Coupon) error
 	ServiceCreateCoupon(data *Coupon) error
+	ServiceGetCouponByID(data *Coupon, id string) error
 }
 
 type service struct {
@@ -47,6 +48,18 @@ func (s *service) ServiceCreateCoupon(data *Coupon) error {
 	}
 
 	if err := s.repo.RepositoryCreateCoupon(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) ServiceGetCouponByID(data *Coupon, id string) error {
+	if id == "" {
+		return utils.NewDomainError(http.StatusBadRequest, "Coupon id is required")
+	}
+
+	if err := s.repo.RepositoryGetCouponByID(data, id); err != nil {
 		return err
 	}
 

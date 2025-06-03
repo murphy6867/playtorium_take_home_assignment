@@ -65,7 +65,6 @@ func (s *service) CreateCartItemService(data *CartItem) error {
 		data.Quantity += instanceCartItem.Quantity
 		data.TotalPrice += utils.RoundFloat(instanceProduct.Price*float64(data.Quantity), 2)
 		data.ID = instanceCartItem.ID
-		fmt.Println("====== 2 > ", data.ID)
 
 		if err := s.repo.RepositoryUpdateCartItem(data, fmt.Sprint(data.ID)); err != nil {
 			return err
