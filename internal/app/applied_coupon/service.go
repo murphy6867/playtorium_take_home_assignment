@@ -1,6 +1,7 @@
 package applied_coupon
 
 import (
+	"fmt"
 	"github.com/murphy6867/productcheckout/internal/app/cart"
 	"github.com/murphy6867/productcheckout/internal/app/coupon"
 	"github.com/murphy6867/productcheckout/internal/utils"
@@ -10,6 +11,7 @@ import (
 
 type AppliedCouponService interface {
 	CreateAppliedCouponService(data *AppliedCoupon) error
+	GetAppliedCouponByCartIDService(data *[]AppliedCoupon, cartID string) error
 }
 
 type service struct {
@@ -49,5 +51,13 @@ func (s *service) CreateAppliedCouponService(data *AppliedCoupon) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *service) GetAppliedCouponByCartIDService(data *[]AppliedCoupon, cartID string) error {
+	if err := s.repo.RepoGetAppliedCouponByCartID(data, cartID); err != nil {
+		return err
+	}
+	fmt.Println("===========> ", data)
 	return nil
 }

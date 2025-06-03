@@ -33,3 +33,15 @@ func (h *AppliedCouponHandler) CreateAppliedCoupon(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, data)
 }
+
+func (h *AppliedCouponHandler) GetAppliedCouponByCartAndCouponID(c *gin.Context) {
+	cartID := c.Param("cartID")
+	var data []AppliedCoupon
+
+	if err := h.svc.GetAppliedCouponByCartIDService(&data, cartID); err != nil {
+		utils.HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}

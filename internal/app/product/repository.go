@@ -1,7 +1,6 @@
 package product
 
 import (
-	"github.com/murphy6867/productcheckout/internal/config"
 	"github.com/murphy6867/productcheckout/internal/utils"
 	"gorm.io/gorm"
 	"net/http"
@@ -22,7 +21,7 @@ func NewProductRepository(db *gorm.DB) ProductRepository {
 }
 
 func (r *repository) RepositoryGetProducts(data *[]Product) error {
-	if err := config.DB.Find(&data).Error; err != nil {
+	if err := r.db.Find(&data).Error; err != nil {
 		return utils.NewDomainError(http.StatusNotFound, "No product found")
 	}
 
@@ -30,7 +29,7 @@ func (r *repository) RepositoryGetProducts(data *[]Product) error {
 }
 
 func (r *repository) RepositoryGetProduct(data *Product, id string) error {
-	if err := config.DB.First(&data, id).Error; err != nil {
+	if err := r.db.First(&data, id).Error; err != nil {
 		return utils.NewDomainError(http.StatusNotFound, "No product found")
 	}
 
@@ -38,7 +37,7 @@ func (r *repository) RepositoryGetProduct(data *Product, id string) error {
 }
 
 func (r *repository) RepositoryCreatProduct(data *Product) error {
-	if err := config.DB.Create(&data).Error; err != nil {
+	if err := r.db.Create(&data).Error; err != nil {
 		return utils.NewDomainError(http.StatusNotImplemented, "The request method is not supported by the server")
 	}
 

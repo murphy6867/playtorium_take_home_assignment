@@ -62,6 +62,7 @@ func main() {
 	router.GET("/cart_item/:cartID", cartItemHdl.GetCartItemByCartIDHandler)
 	router.POST("/cart_item", cartItemHdl.CreateCartItemsHandler)
 
+	router.GET("/applied_coupon/:cartID", appliedCouponHdl.GetAppliedCouponByCartAndCouponID)
 	router.POST("/applied_coupon", appliedCouponHdl.CreateAppliedCoupon)
 
 	router.Run()

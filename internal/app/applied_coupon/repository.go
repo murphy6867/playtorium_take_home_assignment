@@ -10,6 +10,7 @@ import (
 type AppliedCouponRepository interface {
 	RepoCreateAppliedCoupon(data *AppliedCoupon) error
 	RepoGetAppliedCouponByCartAndCouponID(data *AppliedCoupon) (*AppliedCoupon, error)
+	RepoGetAppliedCouponByCartID(data *[]AppliedCoupon, cartID string) error
 }
 
 type repository struct {
@@ -39,4 +40,21 @@ func (r *repository) RepoGetAppliedCouponByCartAndCouponID(data *AppliedCoupon) 
 	}
 
 	return data, nil
+}
+
+func (r *repository) RepoGetAppliedCouponByCartID(data *[]AppliedCoupon, cartID string) error {
+	if err := r.db.
+		Preload("Coupon").
+		Where("cart_id = ?", cartID).
+		Find(data).
+		Error; err != nil {
+		log.Printf("Error: %s", err)
+		return utils.NewDomainError(http.StatusNotFound, "No Applied Coupon found")
+	}
+
+	if len(*data) == 0 {
+		return utils.NewDomainError(http.StatusNotFound, "No Applied Coupon found")
+	}
+
+	return nil
 }
