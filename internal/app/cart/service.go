@@ -10,6 +10,8 @@ type CartService interface {
 	GetCart(data *Cart, id string) error
 	CreateCart(data *Cart) error
 	FindOrCreateCart(data *Cart, cartID uint) error
+	RecalculateTotalPriceService(cartID uint, totalPrice float64) error
+	RecalculateTotalDiscountService(cartID uint, totalDiscount float64) error
 }
 
 type service struct {
@@ -60,6 +62,38 @@ func (svc *service) CreateCart(data *Cart) error {
 
 func (svc *service) FindOrCreateCart(data *Cart, cartID uint) error {
 	if err := svc.repo.RepositoryFindOrCreateCart(data, cartID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *service) RecalculateTotalPriceService(cartID uint, totalPrice float64) error {
+	if cartID <= 0 {
+		return utils.NewDomainError(http.StatusBadRequest, "Cart id is required")
+	}
+
+	if totalPrice < 0 {
+		return utils.NewDomainError(http.StatusBadRequest, "Total price must be greater than 0")
+	}
+
+	if err := svc.repo.RepositoryUpdateCartTotalPrice(cartID, totalPrice); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (svc *service) RecalculateTotalDiscountService(cartID uint, totalDiscount float64) error {
+	if cartID <= 0 {
+		return utils.NewDomainError(http.StatusBadRequest, "Cart id is required")
+	}
+
+	if totalDiscount < 0 {
+		return utils.NewDomainError(http.StatusBadRequest, "Total discount must be greater than 0")
+	}
+
+	if err := svc.repo.RepositoryUpdateCartTotalDiscount(cartID, totalDiscount); err != nil {
 		return err
 	}
 

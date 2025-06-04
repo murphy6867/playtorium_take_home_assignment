@@ -53,3 +53,20 @@ func (h *CouponHandler) GetCouponById(c *gin.Context) {
 
 	c.JSON(http.StatusOK, coupon)
 }
+
+func (h *CouponHandler) UpdateCouponPointUse(c *gin.Context) {
+	var coupon Coupon
+
+	if err := json.NewDecoder(c.Request.Body).Decode(&coupon); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Server error",
+		})
+		return
+	}
+
+	if err := h.svc.RepoUpdatePointUse(&coupon); err != nil {
+		utils.HandleError(c, err)
+	}
+
+	c.JSON(http.StatusOK, coupon)
+}

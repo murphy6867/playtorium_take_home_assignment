@@ -40,7 +40,7 @@ func main() {
 	cartItemHdl := cart_item.NewCartItemHandler(cartItemSvc)
 
 	appliedCouponRepo := applied_coupon.NewAppliedCouponRepository(config.DB)
-	appliedCouponSvc := applied_coupon.NewAppliedCouponService(appliedCouponRepo, cartSvc, couponSvc)
+	appliedCouponSvc := applied_coupon.NewAppliedCouponService(appliedCouponRepo, cartSvc, couponSvc, cartItemSvc)
 	appliedCouponHdl := applied_coupon.NewAppliedCouponHandler(appliedCouponSvc)
 
 	router.GET("/category", categoryHdl.GetCategory)
@@ -54,6 +54,7 @@ func main() {
 	router.GET("/coupon", couponHdl.GetCouponsHandler)
 	router.GET("/coupon/:id", couponHdl.GetCouponById)
 	router.POST("/coupon", couponHdl.PostCoupon)
+	router.PATCH("/coupon", couponHdl.UpdateCouponPointUse)
 
 	router.GET("/cart", cartHdl.GetCartsHandler)
 	router.GET("/cart/:id", cartHdl.GetCartByIdHandler)
@@ -64,6 +65,7 @@ func main() {
 
 	router.GET("/applied_coupon/:cartID", appliedCouponHdl.GetAppliedCouponByCartAndCouponID)
 	router.POST("/applied_coupon", appliedCouponHdl.CreateAppliedCoupon)
+	router.DELETE("/applied_coupon", appliedCouponHdl.DeleteAppliedCoupon)
 
 	router.Run()
 }

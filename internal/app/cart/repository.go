@@ -11,6 +11,8 @@ type CartRepository interface {
 	RepositoryGetCart(*Cart, string) error
 	RepositoryCreateCart(*Cart) error
 	RepositoryFindOrCreateCart(data *Cart, cartID uint) error
+	RepositoryUpdateCartTotalPrice(id uint, totalPrice float64) error
+	RepositoryUpdateCartTotalDiscount(id uint, totalDiscount float64) error
 }
 
 type repository struct {
@@ -48,6 +50,29 @@ func (r *repository) RepositoryCreateCart(data *Cart) error {
 func (r *repository) RepositoryFindOrCreateCart(data *Cart, cartID uint) error {
 	if err := r.db.Find(&data, cartID).Error; err != nil {
 		return utils.NewDomainError(http.StatusNotFound, "No cart found")
+	}
+
+	return nil
+}
+
+func (r *repository) RepositoryUpdateCartTotalPrice(id uint, totalPrice float64) error {
+	if err := r.db.Model(Cart{}).
+		Where("id = ?", id).
+		Update("total_price", totalPrice).
+		Error; err != nil {
+		return utils.NewDomainError(http.StatusInternalServerError, "Server can not update cart item")
+	}
+
+	return nil
+}
+func (r *repository) RepositoryUpdateCartTotalDiscount(id uint, totalDiscount float64) error {
+	if err := r.db.Model(&Cart{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"discount_amount":      totalDiscount,
+			"price_after_discount": gorm.Expr("total_price - ?", totalDiscount),
+		}).Error; err != nil {
+		return utils.NewDomainError(http.StatusInternalServerError, "Server can not apply discount calculation")
 	}
 
 	return nil

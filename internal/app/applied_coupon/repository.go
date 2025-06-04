@@ -1,6 +1,8 @@
 package applied_coupon
 
 import (
+	"fmt"
+	"github.com/murphy6867/productcheckout/internal/app/coupon"
 	"github.com/murphy6867/productcheckout/internal/utils"
 	"gorm.io/gorm"
 	"log"
@@ -9,8 +11,10 @@ import (
 
 type AppliedCouponRepository interface {
 	RepoCreateAppliedCoupon(data *AppliedCoupon) error
-	RepoGetAppliedCouponByCartAndCouponID(data *AppliedCoupon) (*AppliedCoupon, error)
+	RepoGetAppliedCouponByCartAndCouponID(cartID uint, couponID uint) error
 	RepoGetAppliedCouponByCartID(data *[]AppliedCoupon, cartID string) error
+	RepoDeleteAppliedCoupon(cartID string, couponID string) error
+	RepoValidateIsExistCouponApplied(cartID uint, newCouponID uint) error
 }
 
 type repository struct {
@@ -30,20 +34,20 @@ func (r *repository) RepoCreateAppliedCoupon(data *AppliedCoupon) error {
 	return nil
 }
 
-func (r *repository) RepoGetAppliedCouponByCartAndCouponID(data *AppliedCoupon) (*AppliedCoupon, error) {
+func (r *repository) RepoGetAppliedCouponByCartAndCouponID(cartID, couponID uint) error {
 	if err := r.db.
-		Preload("Coupon").
-		Where("cart_id = ? AND coupon_id = ?", data.CartID, data.CouponID).
-		First(data).
+		Where("cart_id = ? AND coupon_id = ?", cartID, couponID).
+		First(&AppliedCoupon{}).
 		Error; err != nil {
-		return nil, utils.NewDomainError(http.StatusNotFound, "No Applied Coupon found")
+		return utils.NewDomainError(http.StatusNotFound, "No Applied Coupon found")
 	}
 
-	return data, nil
+	return nil
 }
 
 func (r *repository) RepoGetAppliedCouponByCartID(data *[]AppliedCoupon, cartID string) error {
 	if err := r.db.
+		Preload("Cart").
 		Preload("Coupon").
 		Where("cart_id = ?", cartID).
 		Find(data).
@@ -57,4 +61,47 @@ func (r *repository) RepoGetAppliedCouponByCartID(data *[]AppliedCoupon, cartID 
 	}
 
 	return nil
+}
+
+func (r *repository) RepoDeleteAppliedCoupon(cartID string, couponID string) error {
+	if err := r.db.
+		Unscoped().
+		Where("cart_id = ? AND coupon_id = ?", cartID, couponID).
+		Delete(&AppliedCoupon{}).
+		Error; err != nil {
+		return utils.NewDomainError(http.StatusInternalServerError, "Server can not delete applied coupon")
+	}
+
+	return nil
+}
+
+func (r *repository) RepoValidateIsExistCouponApplied(cartID uint, newCouponID uint) error {
+	var newCoupon coupon.Coupon
+	if err := r.db.First(&newCoupon, newCouponID).Error; err != nil {
+		return utils.NewDomainError(
+			http.StatusInternalServerError,
+			"Error fetching new coupon details",
+		)
+	}
+
+	var existingAppliedCoupon AppliedCoupon
+	err := r.db.Joins("LEFT JOIN coupons ON applied_coupons.coupon_id = coupons.id").
+		Where("applied_coupons.cart_id = ? AND coupons.coupon_type = ?", cartID, newCoupon.CouponType).
+		First(&existingAppliedCoupon).Error
+
+	if err == gorm.ErrRecordNotFound {
+		return nil
+	}
+
+	if err == nil {
+		return utils.NewDomainError(
+			http.StatusBadRequest,
+			fmt.Sprintf("Cart already has a coupon of type %s applied", newCoupon.CouponType),
+		)
+	}
+
+	return utils.NewDomainError(
+		http.StatusInternalServerError,
+		fmt.Sprintf("Error checking existing coupons: %v", err),
+	)
 }

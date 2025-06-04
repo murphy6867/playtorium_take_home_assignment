@@ -10,8 +10,10 @@ import (
 type Repository interface {
 	RepositoryCreateCartItem(data *CartItem) error
 	RepositoryGetCartItemByCartAndProductID(data *CartItem, cartID uint, productID uint) (*CartItem, error)
-	RepositoryGetCartItemByCartID(data *[]CartItem, cartID string) error
+	RepositoryGetCartItemsByCartID(data *[]CartItem, cartID string) error
 	RepositoryUpdateCartItem(data *CartItem, id string) error
+	RepoEditCartItem(data *CartItem, quantity int32) error
+	RepoGetCartItemByProductCategory(data *[]CartItem, cartID string, categoryName string) error
 }
 
 type repository struct {
@@ -30,7 +32,7 @@ func (r *repository) RepositoryCreateCartItem(data *CartItem) error {
 	return nil
 }
 
-func (r *repository) RepositoryGetCartItemByCartID(data *[]CartItem, cartID string) error {
+func (r *repository) RepositoryGetCartItemsByCartID(data *[]CartItem, cartID string) error {
 	if err := r.db.
 		Preload("Product").
 		Where("cart_id", cartID).
@@ -67,6 +69,33 @@ func (r *repository) RepositoryUpdateCartItem(data *CartItem, id string) error {
 			TotalPrice: data.TotalPrice,
 		}).Error; err != nil {
 		return utils.NewDomainError(http.StatusInternalServerError, "Server can not update cart item")
+	}
+
+	return nil
+}
+
+func (r *repository) RepoEditCartItem(data *CartItem, quantity int32) error {
+	if err := r.db.Model(data).
+		Where("id = ?", data.ID).
+		Update("quantity", quantity).
+		Error; err != nil {
+		return utils.NewDomainError(http.StatusInternalServerError, "Server can not update cart item")
+	}
+
+	return nil
+}
+
+func (r *repository) RepoGetCartItemByProductCategory(
+	data *[]CartItem,
+	cartID string,
+	categoryName string) error {
+	if err := r.db.
+		Preload("Product").
+		Joins("JOIN products ON products.id = cart_items.product_id").
+		Where("cart_items.cart_id = ? AND products.category_name = ?", cartID, categoryName).
+		Find(data).
+		Error; err != nil {
+		return utils.NewDomainError(http.StatusNotFound, "No cart item found")
 	}
 
 	return nil

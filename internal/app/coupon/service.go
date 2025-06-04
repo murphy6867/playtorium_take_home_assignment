@@ -9,6 +9,8 @@ type CouponService interface {
 	ServiceGetCoupons(data *[]Coupon) error
 	ServiceCreateCoupon(data *Coupon) error
 	ServiceGetCouponByID(data *Coupon, id string) error
+	RepoUpdatePointUse(data *Coupon) error
+	ServiceGetCouponByCouponType(data *Coupon, couponType string) error
 }
 
 type service struct {
@@ -60,6 +62,26 @@ func (s *service) ServiceGetCouponByID(data *Coupon, id string) error {
 	}
 
 	if err := s.repo.RepositoryGetCouponByID(data, id); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) RepoUpdatePointUse(data *Coupon) error {
+	if *data.PointUsed < 0.0 {
+		return utils.NewDomainError(http.StatusBadRequest, "Point used is invalid")
+	}
+
+	return s.repo.RepoUpdatePointUse(data)
+}
+
+func (s *service) ServiceGetCouponByCouponType(data *Coupon, couponType string) error {
+	if couponType == "" {
+		return utils.NewDomainError(http.StatusBadRequest, "Coupon type is required")
+	}
+
+	if err := s.ServiceGetCouponByCouponType(data, couponType); err != nil {
 		return err
 	}
 

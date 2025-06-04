@@ -3,6 +3,7 @@ package applied_coupon
 import (
 	"fmt"
 	"github.com/murphy6867/productcheckout/internal/app/cart"
+	"github.com/murphy6867/productcheckout/internal/app/cart_item"
 	"github.com/murphy6867/productcheckout/internal/app/coupon"
 	"github.com/murphy6867/productcheckout/internal/utils"
 	"net/http"
@@ -10,54 +11,67 @@ import (
 )
 
 type AppliedCouponService interface {
-	CreateAppliedCouponService(data *AppliedCoupon) error
+	CreateAppliedCouponService(cartID uint, couponID uint) error
 	GetAppliedCouponByCartIDService(data *[]AppliedCoupon, cartID string) error
+	DeleteAppliedCouponService(coupon AppliedCoupon) error
 }
 
 type service struct {
-	repo          AppliedCouponRepository
-	cartService   cart.CartService
-	couponService coupon.CouponService
+	repo            AppliedCouponRepository
+	cartService     cart.CartService
+	couponService   coupon.CouponService
+	cartItemService cart_item.CartItemService
 }
 
 func NewAppliedCouponService(
 	repo AppliedCouponRepository,
 	cartService cart.CartService,
 	couponService coupon.CouponService,
+	cartItemService cart_item.CartItemService,
 ) AppliedCouponService {
 	return &service{
-		repo:          repo,
-		cartService:   cartService,
-		couponService: couponService,
+		repo:            repo,
+		cartService:     cartService,
+		couponService:   couponService,
+		cartItemService: cartItemService,
 	}
 }
 
-func (s *service) CreateAppliedCouponService(data *AppliedCoupon) error {
-	if !s.ValidateCart(data.CartID) {
-		return utils.NewDomainError(http.StatusBadRequest, "Cart is not valid")
-	}
-
-	if !s.ValidateCoupon(data.CouponID) {
-		return utils.NewDomainError(http.StatusBadRequest, "Coupon is not valid")
-	}
-
-	data.AppliedAt = time.Now().UTC()
-
-	if s.ValidateExistCouponApplied(data) {
-		return utils.NewDomainError(http.StatusBadRequest, "Coupon is already applied")
-	}
-
-	if err := s.repo.RepoCreateAppliedCoupon(data); err != nil {
+func (s *service) CreateAppliedCouponService(cartID uint, couponID uint) error {
+	if err := s.repo.RepoValidateIsExistCouponApplied(cartID, couponID); err != nil {
 		return err
 	}
 
-	return nil
+	appliedCoupon := AppliedCoupon{
+		CartID:    cartID,
+		CouponID:  couponID,
+		AppliedAt: time.Now(),
+	}
+
+	return s.repo.RepoCreateAppliedCoupon(&appliedCoupon)
+
 }
 
 func (s *service) GetAppliedCouponByCartIDService(data *[]AppliedCoupon, cartID string) error {
-	if err := s.repo.RepoGetAppliedCouponByCartID(data, cartID); err != nil {
+	if cartID == "" {
+		return utils.NewDomainError(http.StatusBadRequest, "Cart ID is required")
+	}
+
+	return s.repo.RepoGetAppliedCouponByCartID(data, cartID)
+}
+
+func (s *service) DeleteAppliedCouponService(coupon AppliedCoupon) error {
+	if fmt.Sprint(coupon.CartID) == "" {
+		return utils.NewDomainError(http.StatusBadRequest, "Cart ID is required")
+	}
+
+	if fmt.Sprint(coupon.CouponID) == "" {
+		return utils.NewDomainError(http.StatusBadRequest, "Coupon ID is required")
+	}
+
+	if err := s.repo.RepoDeleteAppliedCoupon(fmt.Sprint(coupon.CartID), fmt.Sprint(coupon.CouponID)); err != nil {
 		return err
 	}
-	fmt.Println("===========> ", data)
+
 	return nil
 }

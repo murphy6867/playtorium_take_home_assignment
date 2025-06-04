@@ -14,7 +14,8 @@ const (
 
 type Cart struct {
 	gorm.Model
-	TotalPrice     float64    `json:"total_price"`
-	DiscountAmount float64    `json:"discount_amount"`
-	CartStatus     StatusEnum `json:"cart_status"`
+	TotalPrice         float64    `json:"total_price"`
+	DiscountAmount     float64    `json:"discount_amount"`
+	PriceAfterDiscount float64    `json:"price_after_discount"`
+	CartStatus         StatusEnum `json:"cart_status"`
 }

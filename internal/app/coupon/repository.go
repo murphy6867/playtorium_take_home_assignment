@@ -11,6 +11,8 @@ type Repository interface {
 	RepositoryGetCoupons(data *[]Coupon) error
 	RepositoryCreateCoupon(data *Coupon) error
 	RepositoryGetCouponByID(data *Coupon, id string) error
+	RepoUpdatePointUse(data *Coupon) error
+	RepoGetCouponByCouponType(data *Coupon, couponType string) error
 }
 
 type repository struct {
@@ -46,5 +48,25 @@ func (r *repository) RepositoryGetCouponByID(data *Coupon, id string) error {
 		return utils.NewDomainError(http.StatusNotFound, "No coupon found")
 	}
 
+	return nil
+}
+func (r *repository) RepoUpdatePointUse(data *Coupon) error {
+	if err := config.DB.Model(data).
+		Where("id = ?", data.ID).
+		Update("point_used", data.PointUsed).
+		Error; err != nil {
+		return utils.NewDomainError(http.StatusInternalServerError, "Server can not update coupon item")
+	}
+
+	return nil
+}
+
+func (r *repository) RepoGetCouponByCouponType(data *Coupon, couponType string) error {
+	if err := config.DB.
+		Where("coupon_type = ?", couponType).
+		Find(&data).
+		Error; err != nil {
+		return utils.NewDomainError(http.StatusNotFound, "No coupon found")
+	}
 	return nil
 }
