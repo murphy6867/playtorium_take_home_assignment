@@ -47,8 +47,18 @@ func (s *service) CreateAppliedCouponService(cartID uint, couponID uint) error {
 		CouponID:  couponID,
 		AppliedAt: time.Now(),
 	}
+	if err := s.repo.RepoCreateAppliedCoupon(&appliedCoupon); err != nil {
+		return err
+	}
 
-	return s.repo.RepoCreateAppliedCoupon(&appliedCoupon)
+	if err := s.recalculateTotalDiscount(cartID); err != nil {
+		if deleteErr := s.repo.RepoDeleteAppliedCoupon(fmt.Sprint(cartID), fmt.Sprint(couponID)); deleteErr != nil {
+			return fmt.Errorf("failed to recalculate discount and rollback failed: %v, %v", err, deleteErr)
+		}
+		return err
+	}
+
+	return nil
 
 }
 
